@@ -4,6 +4,7 @@ import android.app.ActionBar;
 import android.content.Intent;
 import android.net.Uri;
 import android.support.v4.app.FragmentActivity;
+import android.support.v4.app.FragmentManager;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -15,6 +16,11 @@ import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
 
+import com.baidu.mapapi.map.BaiduMap;
+import com.baidu.mapapi.map.BaiduMapOptions;
+import com.baidu.mapapi.map.MapStatus;
+import com.baidu.mapapi.map.MapView;
+import com.baidu.mapapi.map.SupportMapFragment;
 import com.ikimuhendis.ldrawer.ActionBarDrawerToggle;
 
 public class MainActivity extends FragmentActivity {
@@ -24,6 +30,8 @@ public class MainActivity extends FragmentActivity {
 
     private DrawerLayout mDrawerLayout;
     private ListView mDrawerList;
+    private BaiduMap mBaiduMap = null;
+    SupportMapFragment map;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -34,8 +42,26 @@ public class MainActivity extends FragmentActivity {
     }
 
     private void initView(){
+
         mDrawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
+        initMap();
         initList();
+    }
+
+    /**
+     *　初始化地图
+     */
+    private void initMap(){
+        MapStatus ms = new MapStatus.Builder().overlook(-20).zoom(15).build();
+        BaiduMapOptions bo = new BaiduMapOptions().mapStatus(ms)
+                .compassEnabled(false).zoomControlsEnabled(false);
+        map = SupportMapFragment.newInstance(bo);
+        FragmentManager manager = getSupportFragmentManager();
+        manager.beginTransaction().add(R.id.map, map, "map_fragment").commit();
+        mBaiduMap = map.getBaiduMap();
+
+        //        mBaiduMap = ((SupportMapFragment) (getSupportFragmentManager()
+//                .findFragmentById(R.id.map))).getBaiduMap();
     }
 
     /**
