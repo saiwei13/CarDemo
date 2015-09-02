@@ -18,8 +18,11 @@ import android.widget.ArrayAdapter;
 import android.widget.ListView;
 import android.widget.Toast;
 
+import com.baidu.location.BDLocation;
+import com.baidu.location.BDLocationListener;
 import com.baidu.location.LocationClient;
 import com.baidu.location.LocationClientOption;
+import com.baidu.location.Poi;
 import com.baidu.mapapi.map.BaiduMap;
 import com.baidu.mapapi.map.BaiduMapOptions;
 import com.baidu.mapapi.map.MapStatus;
@@ -30,18 +33,22 @@ import com.baidu.mapapi.map.SupportMapFragment;
 import com.baidu.mapapi.model.LatLng;
 import com.ikimuhendis.ldrawer.ActionBarDrawerToggle;
 
+import java.util.List;
+
 public class MainActivity extends FragmentActivity {
 
     private final String TAG = "chenwei.MainActivity";
 
-    private LocationClient mLocationClient;
     private DrawerLayout mDrawerLayout;
     private ListView mDrawerList;
     private BaiduMap mBaiduMap = null;
-    SupportMapFragment map;
+    private SupportMapFragment map;
 
     private LocationClientOption.LocationMode tempMode = LocationClientOption.LocationMode.Hight_Accuracy;
     private String tempcoor="gcj02";
+
+    public LocationClient mLocationClient;
+    public MyLocationListener mMyLocationListener;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -132,7 +139,9 @@ public class MainActivity extends FragmentActivity {
      */
     private void initLocation(){
 
-        mLocationClient = ((DemoApplication)getApplication()).mLocationClient;
+        mLocationClient = new LocationClient(this);
+        mMyLocationListener = new MyLocationListener();
+        mLocationClient.registerLocationListener(mMyLocationListener);
 
         LocationClientOption option = new LocationClientOption();
 //        option.setLocationMode(tempMode);//可选，默认高精度，设置定位模式，高精度，低功耗，仅设备
@@ -152,6 +161,8 @@ public class MainActivity extends FragmentActivity {
 //        option.setIsNeedLocationDescribe(true);//可选，默认false，设置是否需要位置语义化结果，可以在BDLocation.getLocationDescribe里得到，结果类似于“在北京天安门附近”
 //        option.setIsNeedLocationPoiList(true);//可选，默认false，设置是否需要POI结果，可以在BDLocation.getPoiList里得到
         mLocationClient.setLocOption(option);
+
+        startLoc();
     }
 
     /**
@@ -161,6 +172,10 @@ public class MainActivity extends FragmentActivity {
     public void startLoc(View v){
         Log.i(TAG, "startLoc()");
 
+        startLoc();
+    }
+
+    private void startLoc(){
         if(mLocationClient != null && !mLocationClient.isStarted()){
             mLocationClient.start();
         } else {
@@ -184,7 +199,6 @@ public class MainActivity extends FragmentActivity {
         super.onDestroy();
 
         stopLoc();
-
     }
 
     /**
@@ -193,7 +207,7 @@ public class MainActivity extends FragmentActivity {
      */
     public void operaDrawer(View view){
 
-        Log.i(TAG,"operaDrawer()");
+        Log.i(TAG, "operaDrawer()");
 
         MapStatusUpdate msu = MapStatusUpdateFactory.newLatLng(new LatLng(39.304486, 116.401444));
         mBaiduMap.setMapStatus(msu);
@@ -208,5 +222,25 @@ public class MainActivity extends FragmentActivity {
 //        } else {
 //            mDrawerLayout.openDrawer(mDrawerList);
 //        }
+    }
+
+    /**
+     * 实现实时位置回调监听
+     */
+    public class MyLocationListener implements BDLocationListener {
+
+        @Override
+        public void onReceiveLocation(BDLocation location) {
+//            location.getLatitude()
+//            location.getLongitude()
+
+            Log.i(TAG,"onReceiveLocation()  location.getLatitude()="+location.getLatitude()+" , location.getLongitude()="+location.getLongitude());
+
+            MapStatusUpdate msu = MapStatusUpdateFactory.newLatLng(
+                    new LatLng(
+                            location.getLatitude(),
+                            location.getLongitude()));
+            mBaiduMap.setMapStatus(msu);
+        }
     }
 }

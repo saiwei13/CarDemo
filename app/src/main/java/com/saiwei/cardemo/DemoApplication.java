@@ -14,18 +14,13 @@ import java.util.List;
 public class DemoApplication extends Application {
 
 	private final String TAG = "chenwei.DemoApplication";
-	public LocationClient mLocationClient;
-	public MyLocationListener mMyLocationListener;
+
 
 	@Override
 	public void onCreate() {
 		super.onCreate();
 		// 在使用 SDK 各组间之前初始化 context 信息，传入 ApplicationContext
 		SDKInitializer.initialize(this);
-
-		mLocationClient = new LocationClient(this.getApplicationContext());
-		mMyLocationListener = new MyLocationListener();
-		mLocationClient.registerLocationListener(mMyLocationListener);
 	}
 
 	/**
