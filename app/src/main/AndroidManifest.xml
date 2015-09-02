@@ -2,7 +2,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.saiwei.cardemo"
     android:versionCode="1"
-    android:versionName="1.1.1" >
+    android:versionName="1.2.1" >
 
     <application
         android:name=".DemoApplication"
@@ -10,6 +10,16 @@
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
         android:theme="@style/AppTheme">
+
+        <service
+            android:name="com.baidu.location.f"
+            android:enabled="true"
+            android:process=":remote" >
+            <intent-filter>
+                <action android:name="com.baidu.location.service_v2.2" >
+                </action>
+            </intent-filter>
+        </service>
 
         <meta-data
             android:name="com.baidu.lbsapi.API_KEY"
@@ -27,6 +37,8 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+
     </application>
 
 
