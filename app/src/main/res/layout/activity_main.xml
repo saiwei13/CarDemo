@@ -44,7 +44,7 @@
             android:onClick="startLoc"
             />
 
-        <Button
+        <!--<Button
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="停止定位"
@@ -53,7 +53,7 @@
             android:layout_below="@id/start_loc"
             android:layout_alignParentRight="true"
             android:onClick="stopLoc"
-            />
+            />-->
 
     </RelativeLayout>
 
