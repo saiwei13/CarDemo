@@ -71,6 +71,8 @@ public class MainActivity extends FragmentActivity {
         initView();
     }
 
+    static int i = 0;
+
     private void initView(){
 
         mDrawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
@@ -78,6 +80,41 @@ public class MainActivity extends FragmentActivity {
         initList();
         initLocation();
         initMarker();
+
+
+
+        mBaiduMap.setOnMapStatusChangeListener(new BaiduMap.OnMapStatusChangeListener() {
+            public void onMapStatusChangeStart(MapStatus status) {
+                Log.i(TAG, "onMapStatusChangeStart()   ");
+            }
+
+            public void onMapStatusChangeFinish(MapStatus status) {
+                Log.i(TAG, "onMapStatusChangeFinish()   " );
+
+                mMapCenter = status.target;
+                mMarkerA.setPosition(mMapCenter);
+            }
+
+            public void onMapStatusChange(MapStatus status) {
+//                Log.i(TAG, "onMapStatusChange()   " + status.toString());
+                Log.i(TAG, "onMapStatusChange()   i="+i );
+//                updateMapState();
+
+//                mMapCenter = status.target;
+//                mMarkerA.setPosition(mMapCenter);
+
+                i++;
+
+                if(i>=10){
+                    Log.i(TAG,"i="+i);
+                    i=0;
+                    mMapCenter = status.target;
+                    mMarkerA.setPosition(mMapCenter);
+
+                }
+            }
+        });
+
     }
 
     /**
@@ -166,7 +203,7 @@ public class MainActivity extends FragmentActivity {
     LatLng mMapCenter = null;
 
     private void initMarker(){
-        mMapCenter = new LatLng(26.169348, 118.194487);
+        mMapCenter = new LatLng(28.169348, 118.194487);
 
         OverlayOptions ooA = new MarkerOptions().position(mMapCenter).icon(bdA)
                 .zIndex(9);
@@ -178,25 +215,6 @@ public class MainActivity extends FragmentActivity {
                 if(marker == mMarkerA){
                     Toast.makeText(getApplicationContext(),"A　被点击",Toast.LENGTH_SHORT).show();
                 }
-
-//                Button button = new Button(getApplicationContext());
-//                button.setBackgroundResource(R.drawable.popup);
-//                InfoWindow.OnInfoWindowClickListener listener = null;
-//                if (marker == mMarkerA) {
-//                    button.setText("更改位置");
-//                    listener = new InfoWindow.OnInfoWindowClickListener() {
-//                        public void onInfoWindowClick() {
-//                            LatLng ll = marker.getPosition();
-//                            LatLng llNew = new LatLng(ll.latitude + 0.005,
-//                                    ll.longitude + 0.005);
-//                            marker.setPosition(llNew);
-//                            mBaiduMap.hideInfoWindow();
-//                        }
-//                    };
-//                    LatLng ll = marker.getPosition();
-//                    mInfoWindow = new InfoWindow(BitmapDescriptorFactory.fromView(button), ll, -47, listener);
-//                    mBaiduMap.showInfoWindow(mInfoWindow);
-//                }
                 return true;
             }
         });
@@ -264,6 +282,8 @@ public class MainActivity extends FragmentActivity {
 //        }
     }
 
+    LatLng mCurLoc=null;
+
     /**
      * 实现实时位置回调监听
      */
@@ -276,13 +296,19 @@ public class MainActivity extends FragmentActivity {
 
             Log.i(TAG, "onReceiveLocation()  location.getLatitude()=" + location.getLatitude() + " , location.getLongitude()=" + location.getLongitude());
 
-            MapStatusUpdate msu = MapStatusUpdateFactory.newLatLng(
-                    new LatLng(
-                            location.getLatitude(),
-                            location.getLongitude()))
-                    ;
+            if(location == null) return;
+
+            mCurLoc = new LatLng(
+                    location.getLatitude(),
+                    location.getLongitude());
+
+            MapStatusUpdate msu = MapStatusUpdateFactory.newLatLng(mCurLoc);
             mBaiduMap.setMapStatus(msu);
             mBaiduMap.setMapStatus(MapStatusUpdateFactory.zoomTo(16.0f));
+
+
+            mMapCenter = mCurLoc;
+            mMarkerA.setPosition(mMapCenter);
 
 //            （mBaiduMap.getMapStatus().zoom;MapStatusUpdateFactory.zoomBy(float f))
         }
