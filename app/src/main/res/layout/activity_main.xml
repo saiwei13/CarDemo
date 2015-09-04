@@ -44,6 +44,16 @@
             android:onClick="startLoc"
             />
 
+        <AutoCompleteTextView
+            android:id="@+id/searchkey"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:layout_weight="0.88"
+            android:layout_alignParentBottom="true"
+            android:text=""
+            android:hint="搜索"
+            android:layout_margin="10dip"/>
+
         <!--<Button
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"

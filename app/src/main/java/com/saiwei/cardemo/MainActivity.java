@@ -9,13 +9,17 @@ import android.support.v4.app.FragmentManager;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.AutoCompleteTextView;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.Toast;
 
@@ -38,11 +42,16 @@ import com.baidu.mapapi.map.MarkerOptions;
 import com.baidu.mapapi.map.OverlayOptions;
 import com.baidu.mapapi.map.SupportMapFragment;
 import com.baidu.mapapi.model.LatLng;
+import com.baidu.mapapi.search.poi.PoiSearch;
+import com.baidu.mapapi.search.sug.OnGetSuggestionResultListener;
+import com.baidu.mapapi.search.sug.SuggestionResult;
+import com.baidu.mapapi.search.sug.SuggestionSearch;
+import com.baidu.mapapi.search.sug.SuggestionSearchOption;
 import com.ikimuhendis.ldrawer.ActionBarDrawerToggle;
 
 import java.util.List;
 
-public class MainActivity extends FragmentActivity {
+public class MainActivity extends FragmentActivity implements OnGetSuggestionResultListener,BaiduMap.OnMapStatusChangeListener{
 
     private final String TAG = "chenwei.MainActivity";
 
@@ -63,6 +72,19 @@ public class MainActivity extends FragmentActivity {
     BitmapDescriptor bdA = BitmapDescriptorFactory
             .fromResource(R.drawable.icon_marka);
 
+    private PoiSearch mPoiSearch = null;
+    private SuggestionSearch mSuggestionSearch = null;
+    /**
+     * 搜索关键字输入窗口
+     */
+    private AutoCompleteTextView keyWorldsView = null;
+    private ArrayAdapter<String> sugAdapter = null;
+
+    /**
+     * 当前位置
+     */
+    private LatLng mCurLoc=null;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -81,39 +103,9 @@ public class MainActivity extends FragmentActivity {
         initLocation();
         initMarker();
 
+        mBaiduMap.setOnMapStatusChangeListener(this);
 
-
-        mBaiduMap.setOnMapStatusChangeListener(new BaiduMap.OnMapStatusChangeListener() {
-            public void onMapStatusChangeStart(MapStatus status) {
-                Log.i(TAG, "onMapStatusChangeStart()   ");
-            }
-
-            public void onMapStatusChangeFinish(MapStatus status) {
-                Log.i(TAG, "onMapStatusChangeFinish()   " );
-
-                mMapCenter = status.target;
-                mMarkerA.setPosition(mMapCenter);
-            }
-
-            public void onMapStatusChange(MapStatus status) {
-//                Log.i(TAG, "onMapStatusChange()   " + status.toString());
-                Log.i(TAG, "onMapStatusChange()   i="+i );
-//                updateMapState();
-
-//                mMapCenter = status.target;
-//                mMarkerA.setPosition(mMapCenter);
-
-                i++;
-
-                if(i>=10){
-                    Log.i(TAG,"i="+i);
-                    i=0;
-                    mMapCenter = status.target;
-                    mMarkerA.setPosition(mMapCenter);
-
-                }
-            }
-        });
+        initSearch();
 
     }
 
@@ -221,6 +213,52 @@ public class MainActivity extends FragmentActivity {
     }
 
     /**
+     * 初始化搜索
+     */
+    private void initSearch(){
+
+        mSuggestionSearch = SuggestionSearch.newInstance();
+        mSuggestionSearch.setOnGetSuggestionResultListener(this);
+        keyWorldsView = (AutoCompleteTextView) findViewById(R.id.searchkey);
+        sugAdapter = new ArrayAdapter<String>(this,
+                android.R.layout.simple_dropdown_item_1line);
+        keyWorldsView.setAdapter(sugAdapter);
+
+        /**
+         * 当输入关键字变化时，动态更新建议列表
+         */
+        keyWorldsView.addTextChangedListener(new TextWatcher() {
+
+            @Override
+            public void afterTextChanged(Editable arg0) {
+
+            }
+
+            @Override
+            public void beforeTextChanged(CharSequence arg0, int arg1,
+                                          int arg2, int arg3) {
+
+            }
+
+            @Override
+            public void onTextChanged(CharSequence cs, int arg1, int arg2,
+                                      int arg3) {
+                if (cs.length() <= 0) {
+                    return;
+                }
+//                String city = ((EditText) findViewById(R.id.city)).getText()
+//                        .toString();
+                /**
+                 * 使用建议搜索服务获取建议列表，结果在onSuggestionResult()中更新
+                 */
+                mSuggestionSearch
+                        .requestSuggestion((new SuggestionSearchOption())
+                                .keyword(cs.toString()).location(mMapCenter).city("厦门")); //.city(city)
+            }
+        });
+    }
+
+    /**
      * 开始定位
      * @param v
      */
@@ -282,7 +320,35 @@ public class MainActivity extends FragmentActivity {
 //        }
     }
 
-    LatLng mCurLoc=null;
+    @Override
+    public void onGetSuggestionResult(SuggestionResult suggestionResult) {
+        Log.i(TAG,"onGetSuggestionResult() "+suggestionResult.toString());
+    }
+
+    //---------------地图状态变化---------------------------------------
+
+    @Override
+    public void onMapStatusChangeStart(MapStatus mapStatus) {
+
+    }
+
+    @Override
+    public void onMapStatusChange(MapStatus mapStatus) {
+        i++;
+        if (i >= 10) {
+            Log.i(TAG, "i=" + i);
+            i = 0;
+            mMapCenter = mapStatus.target;
+            mMarkerA.setPosition(mMapCenter);
+
+        }
+    }
+
+    @Override
+    public void onMapStatusChangeFinish(MapStatus mapStatus) {
+        mMapCenter = mapStatus.target;
+        mMarkerA.setPosition(mMapCenter);
+    }
 
     /**
      * 实现实时位置回调监听
@@ -295,7 +361,7 @@ public class MainActivity extends FragmentActivity {
 //            location.getLongitude()
 
             Log.i(TAG, "onReceiveLocation()  location.getLatitude()=" + location.getLatitude() + " , location.getLongitude()=" + location.getLongitude());
-
+            Log.i(TAG,"city = "+location.getCity()+" , citycode= "+location.getCityCode());
             if(location == null) return;
 
             mCurLoc = new LatLng(
