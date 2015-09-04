@@ -42,6 +42,14 @@ import com.baidu.mapapi.map.MarkerOptions;
 import com.baidu.mapapi.map.OverlayOptions;
 import com.baidu.mapapi.map.SupportMapFragment;
 import com.baidu.mapapi.model.LatLng;
+import com.baidu.mapapi.overlayutil.PoiOverlay;
+import com.baidu.mapapi.search.core.PoiInfo;
+import com.baidu.mapapi.search.core.SearchResult;
+import com.baidu.mapapi.search.poi.OnGetPoiSearchResultListener;
+import com.baidu.mapapi.search.poi.PoiCitySearchOption;
+import com.baidu.mapapi.search.poi.PoiDetailResult;
+import com.baidu.mapapi.search.poi.PoiDetailSearchOption;
+import com.baidu.mapapi.search.poi.PoiResult;
 import com.baidu.mapapi.search.poi.PoiSearch;
 import com.baidu.mapapi.search.sug.OnGetSuggestionResultListener;
 import com.baidu.mapapi.search.sug.SuggestionResult;
@@ -51,7 +59,10 @@ import com.ikimuhendis.ldrawer.ActionBarDrawerToggle;
 
 import java.util.List;
 
-public class MainActivity extends FragmentActivity implements OnGetSuggestionResultListener,BaiduMap.OnMapStatusChangeListener{
+public class MainActivity extends FragmentActivity implements
+        OnGetSuggestionResultListener,
+        BaiduMap.OnMapStatusChangeListener,
+        OnGetPoiSearchResultListener{
 
     private final String TAG = "chenwei.MainActivity";
 
@@ -84,6 +95,12 @@ public class MainActivity extends FragmentActivity implements OnGetSuggestionRes
      * 当前位置
      */
     private LatLng mCurLoc=null;
+    /**
+     * 当前城市
+     */
+    private String mCurCity = "";
+
+    private PoiOverlay overlay;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -187,6 +204,7 @@ public class MainActivity extends FragmentActivity implements OnGetSuggestionRes
         mLocationClient.registerLocationListener(mMyLocationListener);
 
         LocationClientOption option = new LocationClientOption();
+        option.setIsNeedAddress(true);
         mLocationClient.setLocOption(option);
 
         startLoc();
@@ -217,6 +235,11 @@ public class MainActivity extends FragmentActivity implements OnGetSuggestionRes
      */
     private void initSearch(){
 
+        overlay = new MyPoiOverlay(mBaiduMap);
+        mBaiduMap.setOnMarkerClickListener(overlay);
+
+        mPoiSearch = PoiSearch.newInstance();
+        mPoiSearch.setOnGetPoiSearchResultListener(this);
         mSuggestionSearch = SuggestionSearch.newInstance();
         mSuggestionSearch.setOnGetSuggestionResultListener(this);
         keyWorldsView = (AutoCompleteTextView) findViewById(R.id.searchkey);
@@ -243,7 +266,7 @@ public class MainActivity extends FragmentActivity implements OnGetSuggestionRes
             @Override
             public void onTextChanged(CharSequence cs, int arg1, int arg2,
                                       int arg3) {
-                if (cs.length() <= 0) {
+                if (cs.length() <= 0 || mCurCity == null) {
                     return;
                 }
 //                String city = ((EditText) findViewById(R.id.city)).getText()
@@ -253,7 +276,7 @@ public class MainActivity extends FragmentActivity implements OnGetSuggestionRes
                  */
                 mSuggestionSearch
                         .requestSuggestion((new SuggestionSearchOption())
-                                .keyword(cs.toString()).location(mMapCenter).city("厦门")); //.city(city)
+                                .keyword(cs.toString()).location(mMapCenter).city(mCurCity)); //.city(city)
             }
         });
     }
@@ -320,9 +343,41 @@ public class MainActivity extends FragmentActivity implements OnGetSuggestionRes
 //        }
     }
 
+
+    /**
+     * 影响搜索按钮点击事件
+     *
+     * @param v
+     */
+    public void searchButtonProcess(View v) {
+        EditText editSearchKey = (EditText) findViewById(R.id.searchkey);
+        mPoiSearch.searchInCity((new PoiCitySearchOption())
+                .city(mCurCity)
+                .keyword(editSearchKey.getText().toString())
+                .pageNum(0));
+    }
+
+
+    //---------------------------------------------------------------------
+    //---------------------------------------------------------------------
+
     @Override
-    public void onGetSuggestionResult(SuggestionResult suggestionResult) {
-        Log.i(TAG,"onGetSuggestionResult() "+suggestionResult.toString());
+    public void onGetSuggestionResult(SuggestionResult res) {
+
+//        Log.i(TAG,"onGetSuggestionResult() "+suggestionResult.toString());
+
+        if (res == null || res.getAllSuggestions() == null) {
+            return;
+        }
+        sugAdapter.clear();
+        for (SuggestionResult.SuggestionInfo info : res.getAllSuggestions()) {
+            if (info.key != null){
+
+                Log.i(TAG,"key = "+info.key);
+                sugAdapter.add(info.key);
+            }
+        }
+        sugAdapter.notifyDataSetChanged();
     }
 
     //---------------地图状态变化---------------------------------------
@@ -350,6 +405,27 @@ public class MainActivity extends FragmentActivity implements OnGetSuggestionRes
         mMarkerA.setPosition(mMapCenter);
     }
 
+    //-------------poi search callback------------------------------------
+
+    @Override
+    public void onGetPoiResult(PoiResult result) {
+        Log.i(TAG,"onGetPoiResult() num="+result.getCurrentPageNum());
+
+        if (result.error == SearchResult.ERRORNO.NO_ERROR) {
+//            mBaiduMap.clear();
+
+            overlay.setData(result);
+            overlay.addToMap();
+            overlay.zoomToSpan();
+            return;
+        }
+    }
+
+    @Override
+    public void onGetPoiDetailResult(PoiDetailResult result) {
+        Log.i(TAG, "onGetPoiDetailResult() " + result.getAddress()+" , "+result.getLocation());
+    }
+
     /**
      * 实现实时位置回调监听
      */
@@ -357,12 +433,13 @@ public class MainActivity extends FragmentActivity implements OnGetSuggestionRes
 
         @Override
         public void onReceiveLocation(BDLocation location) {
-//            location.getLatitude()
-//            location.getLongitude()
+
+            if(location == null) return;
 
             Log.i(TAG, "onReceiveLocation()  location.getLatitude()=" + location.getLatitude() + " , location.getLongitude()=" + location.getLongitude());
-            Log.i(TAG,"city = "+location.getCity()+" , citycode= "+location.getCityCode());
-            if(location == null) return;
+//            Log.i(TAG,"city = "+location.getCity()+" , citycode= "+location.getCityCode());
+
+            mCurCity = location.getCity();
 
             mCurLoc = new LatLng(
                     location.getLatitude(),
@@ -372,11 +449,28 @@ public class MainActivity extends FragmentActivity implements OnGetSuggestionRes
             mBaiduMap.setMapStatus(msu);
             mBaiduMap.setMapStatus(MapStatusUpdateFactory.zoomTo(16.0f));
 
-
             mMapCenter = mCurLoc;
             mMarkerA.setPosition(mMapCenter);
 
 //            （mBaiduMap.getMapStatus().zoom;MapStatusUpdateFactory.zoomBy(float f))
+        }
+    }
+
+    private class MyPoiOverlay extends PoiOverlay {
+
+        public MyPoiOverlay(BaiduMap baiduMap) {
+            super(baiduMap);
+        }
+
+        @Override
+        public boolean onPoiClick(int index) {
+            super.onPoiClick(index);
+            PoiInfo poi = getPoiResult().getAllPoi().get(index);
+            // if (poi.hasCaterDetails) {
+            mPoiSearch.searchPoiDetail((new PoiDetailSearchOption())
+                    .poiUid(poi.uid));
+            // }
+            return true;
         }
     }
 }
