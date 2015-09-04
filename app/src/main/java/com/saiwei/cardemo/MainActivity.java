@@ -209,8 +209,11 @@ public class MainActivity extends FragmentActivity {
 
         Log.i(TAG, "operaDrawer()");
 
-        MapStatusUpdate msu = MapStatusUpdateFactory.newLatLng(new LatLng(39.304486, 116.401444));
-        mBaiduMap.setMapStatus(msu);
+//        float zoom = mBaiduMap.getMapStatus().zoom;
+//        Toast.makeText(this,"zoom = "+zoom,Toast.LENGTH_SHORT).show();
+
+//        MapStatusUpdate msu = MapStatusUpdateFactory.newLatLng(new LatLng(39.304486, 116.401444));
+//        mBaiduMap.setMapStatus(msu);
 
 //        LatLng mMapCenter = mBaiduMap.getMapStatus().target;
 //        Point tmp = mBaiduMap.getMapStatus().targetScreen;
@@ -234,13 +237,17 @@ public class MainActivity extends FragmentActivity {
 //            location.getLatitude()
 //            location.getLongitude()
 
-            Log.i(TAG,"onReceiveLocation()  location.getLatitude()="+location.getLatitude()+" , location.getLongitude()="+location.getLongitude());
+            Log.i(TAG, "onReceiveLocation()  location.getLatitude()=" + location.getLatitude() + " , location.getLongitude()=" + location.getLongitude());
 
             MapStatusUpdate msu = MapStatusUpdateFactory.newLatLng(
                     new LatLng(
                             location.getLatitude(),
-                            location.getLongitude()));
+                            location.getLongitude()))
+                    ;
             mBaiduMap.setMapStatus(msu);
+            mBaiduMap.setMapStatus(MapStatusUpdateFactory.zoomTo(16.0f));
+
+//            （mBaiduMap.getMapStatus().zoom;MapStatusUpdateFactory.zoomBy(float f))
         }
     }
 }
