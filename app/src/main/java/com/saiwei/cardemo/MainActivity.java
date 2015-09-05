@@ -56,10 +56,12 @@ import com.baidu.mapapi.search.sug.OnGetSuggestionResultListener;
 import com.baidu.mapapi.search.sug.SuggestionResult;
 import com.baidu.mapapi.search.sug.SuggestionSearch;
 import com.baidu.mapapi.search.sug.SuggestionSearchOption;
+import com.baidu.navisdk.adapter.BNRoutePlanNode;
 import com.baidu.navisdk.adapter.BaiduNaviManager;
 import com.ikimuhendis.ldrawer.ActionBarDrawerToggle;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.List;
 
 public class MainActivity extends FragmentActivity implements
@@ -117,7 +119,7 @@ public class MainActivity extends FragmentActivity implements
         initView();
     }
 
-    static int i = 0;
+    private static int i = 0;
 
     private void initView(){
 
@@ -341,6 +343,8 @@ public class MainActivity extends FragmentActivity implements
 
         Log.i(TAG, "operaDrawer()");
 
+        routeplanToNavi(BNRoutePlanNode.CoordinateType.WGS84);
+
 //        float zoom = mBaiduMap.getMapStatus().zoom;
 //        Toast.makeText(this,"zoom = "+zoom,Toast.LENGTH_SHORT).show();
 
@@ -389,7 +393,7 @@ public class MainActivity extends FragmentActivity implements
         for (SuggestionResult.SuggestionInfo info : res.getAllSuggestions()) {
             if (info.key != null){
 
-                Log.i(TAG,"key = "+info.key);
+                Log.i(TAG,"key = "+info.key+" , "+info.pt);
                 sugAdapter.add(info.key);
             }
         }
@@ -523,7 +527,7 @@ public class MainActivity extends FragmentActivity implements
 
         Log.i(TAG,"initNavi()  mSDCardPath="+mSDCardPath+" , APP_FOLDER_NAME="+APP_FOLDER_NAME);
 
-//        BaiduNaviManager.getInstance().setNativeLibraryPath(mSDCardPath + "/BaiduNaviSDK_SO");
+        BaiduNaviManager.getInstance().setNativeLibraryPath(mSDCardPath + "/BaiduNaviSDK_SO");
         BaiduNaviManager.getInstance().init(this, mSDCardPath, APP_FOLDER_NAME,
                 new BaiduNaviManager.NaviInitListener() {
                     @Override
@@ -553,5 +557,76 @@ public class MainActivity extends FragmentActivity implements
                         Toast.makeText(MainActivity.this, "百度导航引擎初始化失败", Toast.LENGTH_SHORT).show();
                     }
                 }, null /*mTTSCallback*/);
+    }
+
+
+
+    private void routeplanToNavi(BNRoutePlanNode.CoordinateType coType) {
+        BNRoutePlanNode sNode = null;
+        BNRoutePlanNode eNode = null;
+        switch(coType) {
+            case GCJ02: {
+
+                sNode = new BNRoutePlanNode(118.097483, 24.435572,
+                        "厦门起点", null, coType);
+                eNode = new BNRoutePlanNode(118.181295,24.491452,
+                        "厦门终点", null, coType);
+
+//				sNode = new BNRoutePlanNode(116.30142, 40.05087,
+//			    		"百度大厦", null, coType);
+//				eNode = new BNRoutePlanNode(116.39750, 39.90882,
+//			    		"北京天安门", null, coType);
+                break;
+            }
+            case WGS84: {
+
+                sNode = new BNRoutePlanNode(118.097483, 24.435572,
+                        "厦门起点", null, coType);
+                eNode = new BNRoutePlanNode(118.181295,24.491452,
+                        "厦门终点", null, coType);
+
+//				sNode = new BNRoutePlanNode(116.300821,40.050969,
+//			    		"百度大厦", null, coType);
+//				eNode = new BNRoutePlanNode(116.397491,39.908749,
+//			    		"北京天安门", null, coType);
+                break;
+            }
+            case BD09_MC: {
+                sNode = new BNRoutePlanNode(12947471,4846474,
+                        "百度大厦", null, coType);
+                eNode = new BNRoutePlanNode(12958160,4825947,
+                        "北京天安门", null, coType);
+                break;
+            }
+            default : ;
+        }
+        if (sNode != null && eNode != null) {
+            List<BNRoutePlanNode> list = new ArrayList<BNRoutePlanNode>();
+            list.add(sNode);
+            list.add(eNode);
+            BaiduNaviManager.getInstance().launchNavigator(this, list, 1, true, new DemoRoutePlanListener(sNode));
+        }
+    }
+
+    public class DemoRoutePlanListener implements BaiduNaviManager.RoutePlanListener {
+
+        private BNRoutePlanNode mBNRoutePlanNode = null;
+        public DemoRoutePlanListener(BNRoutePlanNode node){
+            mBNRoutePlanNode = node;
+        }
+
+        @Override
+        public void onJumpToNavigator() {
+            Intent intent = new Intent(MainActivity.this, BNDemoGuideActivity.class);
+            Bundle bundle = new Bundle();
+            bundle.putSerializable(ROUTE_PLAN_NODE, (BNRoutePlanNode) mBNRoutePlanNode);
+            intent.putExtras(bundle);
+            startActivity(intent);
+        }
+        @Override
+        public void onRoutePlanFailed() {
+            // TODO Auto-generated method stub
+
+        }
     }
 }
