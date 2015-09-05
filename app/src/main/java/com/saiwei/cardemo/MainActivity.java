@@ -105,7 +105,7 @@ public class MainActivity extends FragmentActivity implements
 
     private PoiOverlay overlay;
 
-    private static final String APP_FOLDER_NAME = "BNSDKDemo";
+    private static final String APP_FOLDER_NAME = "BNSDKDemo_saiwei";
     private String mSDCardPath = null;
     public static final String ROUTE_PLAN_NODE = "routePlanNode";
 
@@ -523,7 +523,7 @@ public class MainActivity extends FragmentActivity implements
 
         Log.i(TAG,"initNavi()  mSDCardPath="+mSDCardPath+" , APP_FOLDER_NAME="+APP_FOLDER_NAME);
 
-        BaiduNaviManager.getInstance().setNativeLibraryPath(mSDCardPath + "/BaiduNaviSDK_SO");
+//        BaiduNaviManager.getInstance().setNativeLibraryPath(mSDCardPath + "/BaiduNaviSDK_SO");
         BaiduNaviManager.getInstance().init(this, mSDCardPath, APP_FOLDER_NAME,
                 new BaiduNaviManager.NaviInitListener() {
                     @Override
