@@ -4,6 +4,7 @@ import android.app.ActionBar;
 import android.content.Intent;
 import android.graphics.Point;
 import android.net.Uri;
+import android.os.Environment;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.widget.DrawerLayout;
@@ -55,8 +56,10 @@ import com.baidu.mapapi.search.sug.OnGetSuggestionResultListener;
 import com.baidu.mapapi.search.sug.SuggestionResult;
 import com.baidu.mapapi.search.sug.SuggestionSearch;
 import com.baidu.mapapi.search.sug.SuggestionSearchOption;
+import com.baidu.navisdk.adapter.BaiduNaviManager;
 import com.ikimuhendis.ldrawer.ActionBarDrawerToggle;
 
+import java.io.File;
 import java.util.List;
 
 public class MainActivity extends FragmentActivity implements
@@ -102,6 +105,10 @@ public class MainActivity extends FragmentActivity implements
 
     private PoiOverlay overlay;
 
+    private static final String APP_FOLDER_NAME = "BNSDKDemo";
+    private String mSDCardPath = null;
+    public static final String ROUTE_PLAN_NODE = "routePlanNode";
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -123,7 +130,16 @@ public class MainActivity extends FragmentActivity implements
         mBaiduMap.setOnMapStatusChangeListener(this);
 
         initSearch();
+        initBaiduNavi();
+    }
 
+    /**
+     * 初始化百度导航
+     */
+    private void initBaiduNavi(){
+        if ( initDirs() ) {
+            initNavi();
+        }
     }
 
     /**
@@ -472,5 +488,70 @@ public class MainActivity extends FragmentActivity implements
             // }
             return true;
         }
+    }
+
+    //---------------------导航模块-------------------------
+
+    private boolean initDirs() {
+        mSDCardPath = getSdcardDir();
+        if ( mSDCardPath == null ) {
+            return false;
+        }
+        File f = new File(mSDCardPath, APP_FOLDER_NAME);
+        if ( !f.exists() ) {
+            try {
+                f.mkdir();
+            } catch (Exception e) {
+                e.printStackTrace();
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private String getSdcardDir() {
+        if (Environment.getExternalStorageState().equalsIgnoreCase(
+                Environment.MEDIA_MOUNTED)) {
+            return Environment.getExternalStorageDirectory().toString();
+        }
+        return null;
+    }
+
+    String authinfo = null;
+
+    private void initNavi() {
+
+        Log.i(TAG,"initNavi()  mSDCardPath="+mSDCardPath+" , APP_FOLDER_NAME="+APP_FOLDER_NAME);
+
+        BaiduNaviManager.getInstance().setNativeLibraryPath(mSDCardPath + "/BaiduNaviSDK_SO");
+        BaiduNaviManager.getInstance().init(this, mSDCardPath, APP_FOLDER_NAME,
+                new BaiduNaviManager.NaviInitListener() {
+                    @Override
+                    public void onAuthResult(int status, String msg) {
+                        if (0 == status) {
+                            authinfo = "key校验成功!";
+                        } else {
+                            authinfo = "key校验失败, " + msg;
+                        }
+                        MainActivity.this.runOnUiThread(new Runnable() {
+
+                            @Override
+                            public void run() {
+                                Toast.makeText(MainActivity.this, authinfo, Toast.LENGTH_LONG).show();
+                            }
+                        });
+                    }
+                    public void initSuccess() {
+                        Toast.makeText(MainActivity.this, "百度导航引擎初始化成功", Toast.LENGTH_SHORT).show();
+                    }
+
+                    public void initStart() {
+                        Toast.makeText(MainActivity.this, "百度导航引擎初始化开始", Toast.LENGTH_SHORT).show();
+                    }
+
+                    public void initFailed() {
+                        Toast.makeText(MainActivity.this, "百度导航引擎初始化失败", Toast.LENGTH_SHORT).show();
+                    }
+                }, null /*mTTSCallback*/);
     }
 }
