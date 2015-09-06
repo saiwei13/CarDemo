@@ -233,19 +233,19 @@ public class MainActivity extends FragmentActivity implements
     private void initMarker(){
         mMapCenter = new LatLng(28.169348, 118.194487);
 
-        OverlayOptions ooA = new MarkerOptions().position(mMapCenter).icon(bdA)
-                .zIndex(9);
-        mMarkerA = (Marker) (mBaiduMap.addOverlay(ooA));
-
-        mBaiduMap.setOnMarkerClickListener(new BaiduMap.OnMarkerClickListener() {
-            public boolean onMarkerClick(final Marker marker) {
-
-                if(marker == mMarkerA){
-                    Toast.makeText(getApplicationContext(),"A　被点击",Toast.LENGTH_SHORT).show();
-                }
-                return true;
-            }
-        });
+//        OverlayOptions ooA = new MarkerOptions().position(mMapCenter).icon(bdA)
+//                .zIndex(9);
+//        mMarkerA = (Marker) (mBaiduMap.addOverlay(ooA));
+//
+//        mBaiduMap.setOnMarkerClickListener(new BaiduMap.OnMarkerClickListener() {
+//            public boolean onMarkerClick(final Marker marker) {
+//
+//                if(marker == mMarkerA){
+//                    Toast.makeText(getApplicationContext(),"A　被点击",Toast.LENGTH_SHORT).show();
+//                }
+//                return true;
+//            }
+//        });
     }
 
     /**
@@ -414,7 +414,7 @@ public class MainActivity extends FragmentActivity implements
             Log.i(TAG, "i=" + i);
             i = 0;
             mMapCenter = mapStatus.target;
-            mMarkerA.setPosition(mMapCenter);
+//            mMarkerA.setPosition(mMapCenter);
 
         }
     }
@@ -422,7 +422,7 @@ public class MainActivity extends FragmentActivity implements
     @Override
     public void onMapStatusChangeFinish(MapStatus mapStatus) {
         mMapCenter = mapStatus.target;
-        mMarkerA.setPosition(mMapCenter);
+//        mMarkerA.setPosition(mMapCenter);
     }
 
     //-------------poi search callback------------------------------------
@@ -470,7 +470,7 @@ public class MainActivity extends FragmentActivity implements
             mBaiduMap.setMapStatus(MapStatusUpdateFactory.zoomTo(16.0f));
 
             mMapCenter = mCurLoc;
-            mMarkerA.setPosition(mMapCenter);
+//            mMarkerA.setPosition(mMapCenter);
 
 //            （mBaiduMap.getMapStatus().zoom;MapStatusUpdateFactory.zoomBy(float f))
         }

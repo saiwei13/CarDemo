@@ -3,6 +3,23 @@
 方法2．以地图中点，进行搜索
 该ｄｅｍｏ，现使用方法１．
 
+注：经纬度加密问题
+参考：http://bbs.lbsyun.baidu.com/forum.php?mod=viewthread&tid=2920&highlight=WGS84
+
+注：jniLibs 目录，好像只认一个，不是并集的关系
+-----------------------------------
+
+
+
+-------------------------
+version : 1.5.1
+    bug:在地图中心，放个图钉，移动不平滑，会卡顿
+    原因：现在地图图层上添加一个marker,然后移动的时候，
+    　　　实时更新marker位置，实时update
+    解决:在ｍａｐ上放一个imageview,
+        android:layout_centerInParent="true",
+        现在可以达到滴滴移图的效果了
+
 -------------------------
 version : 1.4.4
     设置起点，终点，可以进入导航模式
